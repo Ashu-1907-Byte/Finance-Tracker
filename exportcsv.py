@@ -72,9 +72,4 @@ def export_transactions_to_csv(transactions, start_date, end_date):
     for r in rows_in_range:
         writer.writerow([r[0], r[1], r[2], r[3], r[4]])
 
-    return output.getvalue().encode("utf-8")
-
-
-    
-    
-   
+    return output.getvalue().encode("utf-8")  

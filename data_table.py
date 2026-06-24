@@ -14,4 +14,3 @@ def display_transactions(transactions):
         )
         return df, df_init["id"].tolist()
     return None, []
-    

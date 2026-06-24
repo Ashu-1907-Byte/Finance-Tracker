@@ -1,3 +1,4 @@
+from asyncio import graph
 import importlib.util
 import importlib
 import sys
@@ -15,6 +16,22 @@ except Exception:
     pass
 
 import streamlit as st
+
+
+sidebar = st.sidebar.title("More Options")
+graph = st.sidebar.button("Coming Soon!", key="graph")
+summary = st.sidebar.button("Coming Soon!", key="summary")
+if graph:
+    st.session_state.show_graph = True
+    st.session_state.show_form = False
+    st.session_state.show_transactions = False
+    st.session_state.show_export = False
+    st.line_chart(graph)
+st.set_page_config(page_title="Smart Stash", 
+                   page_icon="💰", 
+                   layout="wide",
+                   initial_sidebar_state="collapsed"
+                   )
 from data import (
     create_table,
     save_transaction,
@@ -33,6 +50,50 @@ except Exception:
 #st.write(f"CSV module origin: {st_csv_origin}")
 from data_table import display_transactions
 import exportcsv
+st.markdown("""
+           <style>
+              body {
+                  background-color: #ced7eb !important;
+              }
+              .stApp {
+                  background-color: #ced7eb !important;
+              }
+              .css-18e3th9 {
+                  background-color: #ced7eb !important;
+              }
+              .css-1d391kg {
+                  background-color: #ced7eb !important;
+              }
+              base = "dark"
+              primaryColor = "#00FFA3"          
+              backgroundColor = "#ced7eb"       
+              secondaryBackgroundColor = "#161F30" 
+              textColor = "#E2E8F0"             
+              font = "sans serif"
+            </style> 
+            """, unsafe_allow_html=True)
+
+st.markdown("""
+    <style>
+        .stButton > button {
+            background-color: #1E90FF;
+            color: white;
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .stButton > button:hover {
+            background-color: #1873CC;
+        }
+        .stButton > button:active {
+            background-color: #1560AA;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 if "show_form" not in st.session_state:
     st.session_state.show_form = False
@@ -44,19 +105,26 @@ if "show_export" not in st.session_state:
     st.session_state.show_export = False
 
 create_table()
-st.header("FinTrack")
+st.title("Smart Stash Dashboard")
 total_expenses = get_total_expenses()
 total_credits = get_total_credits()
-remaining_budget = total_credits - total_expenses
-col1, col2 = st.columns(2)
+total_balance = total_credits - total_expenses
+col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.write("Total Expenses")
-    spent = st.header(total_expenses)
+with st.container(border = True):
+    st.subheader("Financial Overview")
 
-with col2:
-    st.write("Remaining budget")
-    remaining = st.header(remaining_budget)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+      Debit = st.write("Debit")
+      spent = st.header(total_expenses)
+    with col2:
+       Credit = st.write("Credit")
+       remaining = st.header(total_credits)
+    with col3:
+          Balance = st.write("Balance")
+          balance = st.header(total_balance)
+
 
 if not st.session_state.show_form and not st.session_state.show_transactions and not st.session_state.show_export:
     col1, col2, col3 = st.columns(3)

@@ -88,4 +88,3 @@ def get_total_credits():
     total = cursor.fetchone()[0]
     conn.close()
     return total
-

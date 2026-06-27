@@ -1,22 +1,21 @@
-from asyncio import graph
+from decimal import Decimal, ROUND_HALF_UP
 import importlib.util
 import importlib
 import sys
 import os
 
 try:
-    stdlib_csv_path = os.path.join(sys.base_prefix, 'Lib', 'csv.py')
-    spec = importlib.util.find_spec('csv')
-    if not spec or not spec.origin or os.path.normcase(spec.origin) != os.path.normcase(stdlib_csv_path):
-        spec2 = importlib.util.spec_from_file_location('csv', stdlib_csv_path)
-        mod = importlib.util.module_from_spec(spec2)
-        spec2.loader.exec_module(mod)
-        sys.modules['csv'] = mod
-except Exception:
+    stdlib_csv_path = os.path.join(sys.base_prefix, 'Lib', 'csv.py') # To check where the CSV even exists
+    spec = importlib.util.find_spec('csv') # Is it currently looking or using it 
+    if not spec or not spec.origin or os.path.normcase(spec.origin) != os.path.normcase(stdlib_csv_path): #This helps in seeing if there is a CSV file? Is there a location?
+        spec2 = importlib.util.spec_from_file_location('csv', stdlib_csv_path) #Since something went wrong, this creates a fresh, original version of csv code
+        mod = importlib.util.module_from_spec(spec2) #This builds a brand new python workspace
+        spec2.loader.exec_module(mod) #This takes like the good code and puts it in this new workspace
+        sys.modules['csv'] = mod #This swaps the old code out with the new one in the workspace
+except Exception: # This is a safety net. It basically says that if the program is doing something wrong or it is not going in the exact expected way, make sure to continue without crashing the program
     pass
 
 import streamlit as st
-
 
 sidebar = st.sidebar.title("More Options")
 graph = st.sidebar.button("Coming Soon!", key="graph")
@@ -104,11 +103,14 @@ if "show_transactions" not in st.session_state:
 if "show_export" not in st.session_state:
     st.session_state.show_export = False
 
+def quantize_two_decimals(value):
+    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
 create_table()
 st.title("Smart Stash Dashboard")
-total_expenses = get_total_expenses()
-total_credits = get_total_credits()
-total_balance = total_credits - total_expenses
+total_expenses = quantize_two_decimals(get_total_expenses())
+total_credits = quantize_two_decimals(get_total_credits())
+total_balance = quantize_two_decimals(total_credits - total_expenses)
 col1, col2, col3 = st.columns(3)
 
 with st.container(border = True):
@@ -117,13 +119,13 @@ with st.container(border = True):
     col1, col2, col3 = st.columns(3)
     with col1:
       Debit = st.write("Debit")
-      spent = st.header(total_expenses)
+      spent = st.header(f"{total_expenses:.2f}")
     with col2:
        Credit = st.write("Credit")
-       remaining = st.header(total_credits)
+       remaining = st.header(f"{total_credits:.2f}")
     with col3:
           Balance = st.write("Balance")
-          balance = st.header(total_balance)
+          balance = st.header(f"{total_balance:.2f}")
 
 
 if not st.session_state.show_form and not st.session_state.show_transactions and not st.session_state.show_export:
@@ -159,7 +161,14 @@ if st.session_state.show_form:
 
         transaction_type = st.selectbox("Transaction Type", ["Debit", "Credit"])
         category = st.selectbox("Category", ["Food", "Entertainment", "Transport", "Groceries", "Bills", "Income", "Other"])
-        amount = st.number_input("Amount", min_value=0.0, format="%.2f")
+        amount = st.number_input(
+            "Amount",
+            min_value=0.01,
+            max_value=5000.00,
+            value=1.00,
+            step=0.01,
+            format="%.2f",
+        )
         importance = st.selectbox("Importance", ["Important", "Moderate", "Less Important"])
         date = st.date_input("Date")
         col1, col2 = st.columns([4, 1])
@@ -170,6 +179,7 @@ if st.session_state.show_form:
             if amount <= 0:
                 st.error("Please enter an amount greater than 0.")
             else:
+                amount = float(quantize_two_decimals(amount))
                 save_transaction(
                     transaction_type,
                     category,
@@ -274,8 +284,6 @@ if st.session_state.show_export:
                     st.session_state.show_export = False
                     st.success(f"Prepared {file_name} for download.")
                 else:
-
-
                     left_col, center_col, right_col = st.columns([1, 2, 1])
 
                     if not st.session_state.csv_bytes:

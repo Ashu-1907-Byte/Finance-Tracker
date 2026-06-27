@@ -1,8 +1,6 @@
 import io
 import csv
 from datetime import date
-
-
 def _parse_date(d):
     """Try to parse a date-like string to a date object.
     Returns a date or None if parsing fails.
@@ -13,20 +11,15 @@ def _parse_date(d):
         return None
     s = str(d)
     try:
-        # Expect ISO format YYYY-MM-DD
         return date.fromisoformat(s)
     except Exception:
-        # Fallback: try common formats
         for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y", "%Y/%m/%d"):
             try:
                 from datetime import datetime
-
                 return datetime.strptime(s, fmt).date()
             except Exception:
                 continue
     return None
-
-
 def export_transactions_to_csv(transactions, start_date, end_date):
     """Filter transactions by inclusive date range and return CSV bytes.
 
@@ -37,8 +30,6 @@ def export_transactions_to_csv(transactions, start_date, end_date):
     """
     if transactions is None:
         return None
-
-    # Normalize start/end to date objects
     if isinstance(start_date, str):
         start = _parse_date(start_date)
     else:
@@ -47,7 +38,6 @@ def export_transactions_to_csv(transactions, start_date, end_date):
         end = _parse_date(end_date)
     else:
         end = end_date
-
     if start is None or end is None:
         return None
 
@@ -71,5 +61,4 @@ def export_transactions_to_csv(transactions, start_date, end_date):
     writer.writerow(["ID", "Type", "Category", "Amount", "Date"]) 
     for r in rows_in_range:
         writer.writerow([r[0], r[1], r[2], r[3], r[4]])
-
     return output.getvalue().encode("utf-8")  

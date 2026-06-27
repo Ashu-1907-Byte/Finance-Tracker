@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 import sqlite3
 import streamlit as st
 
@@ -26,6 +27,7 @@ def create_table():
 
 
 def save_transaction(transaction_type, category, amount, importance, date):
+    amount = float(Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
@@ -54,6 +56,7 @@ def get_transactions():
 
 
 def update_transaction(transaction_id, transaction_type, category, amount, date):
+    amount = float(Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
